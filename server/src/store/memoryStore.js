@@ -14,6 +14,12 @@ export const memoryStore = {
   requests: []
 };
 
+memoryStore.createProduct = (payload) => {
+  const record = { ...payload, _id: randomUUID(), createdAt: now(), updatedAt: now() };
+  memoryStore.products.unshift(record);
+  return record;
+};
+
 export function createRecord(collection, payload) {
   const record = { ...payload, _id: randomUUID(), createdAt: now(), updatedAt: now() };
   memoryStore[collection].unshift(record);

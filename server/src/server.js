@@ -9,5 +9,5 @@ const connected = await connectDatabase();
 app.locals.useMemory = !connected;
 
 app.listen(port, () => {
-  console.log(`BakeBloom API running on http://localhost:${port}`);
+  console.log(`Cakes and Crunches Design Portal API running on http://localhost:${port}`);
 });

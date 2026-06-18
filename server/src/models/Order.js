@@ -25,8 +25,8 @@ const orderSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true },
     deliveryDate: { type: String, required: true },
     deliverySlot: { type: String, required: true },
-    paymentMode: { type: String, default: "Cash on Delivery" },
-    status: { type: String, default: "Pending" }
+    paymentMode: { type: String, default: "Pay at Store" },
+    status: { type: String, default: "New" }
   },
   { timestamps: true }
 );
