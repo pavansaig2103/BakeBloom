@@ -3,6 +3,7 @@ import api from "../api.js";
 import ProductCard from "../components/ProductCard.jsx";
 
 const priceRanges = ["All", "Under Rs. 750", "Rs. 750 - Rs. 1500", "Rs. 1500 - Rs. 2500", "Rs. 2500+"];
+const quickCategories = ["Birthday", "Wedding", "Anniversary", "Corporate", "Festival", "Brownies", "Cookies", "Pastries", "Sweet Boxes"];
 
 export default function Cakes() {
   const [products, setProducts] = useState([]);
@@ -25,7 +26,7 @@ export default function Cakes() {
         const themeMatch = theme === "All" || product.theme === theme;
         const flavourMatch = flavour === "All" || product.flavour === flavour;
         const priceMatch = priceRange === "All" || product.priceRange === priceRange;
-        const searchText = `${product.name} ${product.referenceId} ${product.description}`.toLowerCase();
+        const searchText = `${product.name} ${product.referenceId} ${product.description} ${product.theme} ${product.priceRange} ${product.price} ${product.occasion} ${product.category} ${(product.tags || []).join(" ")}`.toLowerCase();
         return occasionMatch && themeMatch && flavourMatch && priceMatch && searchText.includes(search.toLowerCase());
       }),
     [products, occasion, theme, flavour, priceRange, search]
@@ -42,7 +43,7 @@ export default function Cakes() {
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search reference" className="input" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, theme, price, occasion" className="input" />
           <select value={occasion} onChange={(e) => setOccasion(e.target.value)} className="input">
             {filterValues("occasion").map((item) => <option key={item}>{item}</option>)}
           </select>
@@ -56,6 +57,13 @@ export default function Cakes() {
             {priceRanges.map((item) => <option key={item}>{item}</option>)}
           </select>
         </div>
+      </div>
+      <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
+        {["All", ...quickCategories].map((item) => (
+          <button key={item} onClick={() => setOccasion(item)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition ${occasion === item ? "bg-cocoa text-white" : "bg-white text-cocoa shadow-sm hover:text-berry"}`}>
+            {item}
+          </button>
+        ))}
       </div>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filtered.map((product) => <ProductCard key={product._id} product={product} />)}

@@ -3,6 +3,8 @@ import api from "../api.js";
 
 export default function CustomOrder() {
   const [success, setSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [form, setForm] = useState({
     customerName: "",
     phone: "",
@@ -12,12 +14,19 @@ export default function CustomOrder() {
     occasion: "",
     budget: "",
     requiredDate: "",
+    fulfillmentType: "Pickup",
     notes: ""
   });
 
   const submit = async (event) => {
     event.preventDefault();
+    if (!form.customerName.trim() || !/^\d{10}$/.test(form.phone.replace(/\D/g, "").slice(-10)) || !form.theme.trim() || !form.requiredDate) {
+      setError("Please enter customer name, 10 digit phone number, theme, and required date.");
+      return;
+    }
+    setSaving(true);
     await api.post("/custom-cake-requests", { ...form, budget: Number(form.budget || 0) });
+    setSaving(false);
     setSuccess(true);
   };
 
@@ -46,10 +55,12 @@ export default function CustomOrder() {
                 <label className="field">Occasion<input className="input mt-2" value={form.occasion} onChange={(e) => setForm({ ...form, occasion: e.target.value })} /></label>
                 <label className="field">Budget<input className="input mt-2" type="number" value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} /></label>
                 <label className="field">Required date<input required className="input mt-2" type="date" value={form.requiredDate} onChange={(e) => setForm({ ...form, requiredDate: e.target.value })} /></label>
+                <label className="field">Delivery / Pickup<select className="input mt-2" value={form.fulfillmentType} onChange={(e) => setForm({ ...form, fulfillmentType: e.target.value })}><option>Pickup</option><option>Delivery</option></select></label>
               </div>
               <label className="field">Reference image<input className="input mt-2 file:mr-4 file:rounded-full file:border-0 file:bg-blush file:px-4 file:py-2 file:font-bold file:text-white" type="file" /></label>
               <label className="field">Additional notes<textarea className="input mt-2 min-h-28" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></label>
-              <button className="rounded-full bg-cocoa px-7 py-3 font-bold text-white transition hover:bg-berry">Submit Enquiry</button>
+              {error && <p className="rounded-2xl bg-cream p-3 text-sm font-bold text-berry">{error}</p>}
+              <button disabled={saving} className="rounded-full bg-cocoa px-7 py-3 font-bold text-white transition hover:bg-berry disabled:opacity-60">{saving ? "Submitting..." : "Submit Enquiry"}</button>
             </div>
           )}
         </form>

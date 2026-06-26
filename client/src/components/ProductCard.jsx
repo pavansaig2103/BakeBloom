@@ -13,14 +13,20 @@ export default function ProductCard({ product }) {
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-berry">{product.referenceId || "Reference Design"}</p>
             <h3 className="mt-2 font-display text-xl font-bold text-ganache">{product.name}</h3>
           </div>
-          <span className="rounded-full bg-butter/70 px-3 py-1 text-sm font-bold">Ref</span>
+          <span className="rounded-full bg-butter/70 px-3 py-1 text-sm font-bold">{product.availability || "Ref"}</span>
         </div>
         <div className="mt-4 grid gap-2 text-sm text-cocoa/70">
           <p><strong>Occasion:</strong> {product.occasion || product.category}</p>
           <p><strong>Theme:</strong> {product.theme || "Signature"}</p>
           <p><strong>Flavor:</strong> {product.flavour || "Customizable"}</p>
+          <p><strong>Size:</strong> {product.size || product.weight || "Customizable"}</p>
           <p><strong>Price range:</strong> {product.priceRange || `Rs. ${product.price}`}</p>
         </div>
+        {!!product.tags?.length && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {product.tags.slice(0, 3).map((tag) => <span key={tag} className="rounded-full bg-cream px-3 py-1 text-xs font-bold text-cocoa/65">{tag}</span>)}
+          </div>
+        )}
         <p className="mt-3 min-h-12 text-sm leading-6 text-cocoa/70">{product.description}</p>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <Link to={`/cakes/${product._id}`} className="rounded-full border border-cocoa/15 px-4 py-2 text-center text-sm font-bold text-cocoa transition hover:border-berry hover:text-berry">

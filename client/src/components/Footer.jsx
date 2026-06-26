@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-3 lg:px-8">
         <div>
           <h3 className="font-display text-2xl font-bold">Cakes and Crunches</h3>
-          <p className="mt-3 text-sm text-cream/75">Cake Photo Gallery & Design Inspiration Portal for managing completed design references and customer enquiries.</p>
+          <p className="mt-3 text-sm text-cream/75">Custom cakes, brownies, cookies, pastries, and sweet boxes for every celebration.</p>
         </div>
         <div>
           <h4 className="font-semibold">Contact</h4>

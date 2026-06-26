@@ -12,6 +12,14 @@ export default function ProductDetails() {
   const { addItem } = useCart();
   const [product, setProduct] = useState(null);
   const [form, setForm] = useState({ flavour: "Chocolate", size: "1kg", message: "", deliveryDate: "", quantity: 1 });
+  const [enquiry, setEnquiry] = useState({
+    customerName: "",
+    phone: "",
+    budget: "",
+    fulfillmentType: "Pickup"
+  });
+  const [statusMessage, setStatusMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     api.get(`/products/${id}`).then((res) => setProduct(res.data)).catch(() => setProduct(null));
@@ -32,6 +40,34 @@ export default function ProductDetails() {
       quantity: Number(form.quantity)
     });
     navigate("/cart");
+  };
+
+  const createEnquiry = async (event) => {
+    event.preventDefault();
+    if (!enquiry.customerName.trim() || !/^\d{10}$/.test(enquiry.phone.replace(/\D/g, "").slice(-10)) || !form.deliveryDate) {
+      setStatusMessage("Please enter customer name, 10 digit phone number, and required date.");
+      return;
+    }
+    setSaving(true);
+    await api.post("/custom-cake-requests", {
+      customerName: enquiry.customerName,
+      phone: enquiry.phone,
+      cakeDesignId: product._id,
+      selectedDesign: product.name,
+      selectedDesignImage: product.image,
+      category: product.category,
+      occasion: product.occasion || product.category,
+      theme: product.theme,
+      flavour: form.flavour,
+      weight: form.size,
+      size: form.size,
+      budget: Number(enquiry.budget || product.price || 0),
+      requiredDate: form.deliveryDate,
+      fulfillmentType: enquiry.fulfillmentType,
+      notes: form.message
+    });
+    setSaving(false);
+    setStatusMessage("Enquiry created. It is now visible in Admin > Enquiries.");
   };
 
   const whatsappMessage = encodeURIComponent(
@@ -76,7 +112,19 @@ export default function ProductDetails() {
             </label>
           </div>
         </div>
-        <div className="mt-8 grid gap-3 sm:grid-cols-2">
+        <form onSubmit={createEnquiry} className="mt-8 rounded-3xl bg-cream p-5">
+          <h2 className="font-display text-2xl font-bold text-ganache">Create Enquiry from This Design</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="field">Customer name<input required className="input mt-2" value={enquiry.customerName} onChange={(e) => setEnquiry({ ...enquiry, customerName: e.target.value })} /></label>
+            <label className="field">Phone number<input required className="input mt-2" value={enquiry.phone} onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })} /></label>
+            <label className="field">Budget<input className="input mt-2" type="number" value={enquiry.budget} onChange={(e) => setEnquiry({ ...enquiry, budget: e.target.value })} placeholder={`Around Rs. ${product.price}`} /></label>
+            <label className="field">Delivery / Pickup<select className="input mt-2" value={enquiry.fulfillmentType} onChange={(e) => setEnquiry({ ...enquiry, fulfillmentType: e.target.value })}><option>Pickup</option><option>Delivery</option></select></label>
+          </div>
+          {statusMessage && <p className="mt-4 rounded-2xl bg-white p-3 text-sm font-bold text-berry">{statusMessage}</p>}
+          <button disabled={saving} className="mt-5 rounded-full bg-cocoa px-7 py-3 font-bold text-white transition hover:bg-berry disabled:opacity-60">{saving ? "Creating..." : "Create Trackable Enquiry"}</button>
+        </form>
+
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button onClick={addToCart} className="rounded-full bg-cocoa px-7 py-4 font-bold text-white transition hover:bg-berry">Use as Reference</button>
           <a href={`https://wa.me/919876543210?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="rounded-full bg-berry px-7 py-4 text-center font-bold text-white transition hover:bg-cocoa">WhatsApp Enquiry</a>
         </div>
