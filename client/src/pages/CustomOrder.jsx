@@ -20,14 +20,32 @@ export default function CustomOrder() {
 
   const submit = async (event) => {
     event.preventDefault();
+    setError("");
     if (!form.customerName.trim() || !/^\d{10}$/.test(form.phone.replace(/\D/g, "").slice(-10)) || !form.theme.trim() || !form.requiredDate) {
       setError("Please enter customer name, 10 digit phone number, theme, and required date.");
       return;
     }
     setSaving(true);
-    await api.post("/custom-cake-requests", { ...form, budget: Number(form.budget || 0) });
-    setSaving(false);
-    setSuccess(true);
+    try {
+      await api.post("/custom-cake-requests", { ...form, budget: Number(form.budget || 0) });
+      setSuccess(true);
+      setForm({
+        customerName: "",
+        phone: "",
+        theme: "",
+        weight: "",
+        flavour: "Chocolate",
+        occasion: "",
+        budget: "",
+        requiredDate: "",
+        fulfillmentType: "Pickup",
+        notes: ""
+      });
+    } catch (submitError) {
+      setError(submitError?.response?.data?.message || "Could not submit enquiry. Please try again or use WhatsApp.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
