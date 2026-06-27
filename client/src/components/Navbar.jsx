@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 
 const links = [
@@ -12,6 +13,7 @@ const links = [
 
 export default function Navbar() {
   const { count } = useCart();
+  const { isLoggedIn, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/70 bg-cream/90 backdrop-blur">
@@ -35,6 +37,11 @@ export default function Navbar() {
               {label === "Saved" ? `Saved (${count})` : label}
             </NavLink>
           ))}
+          {isLoggedIn && (
+            <button onClick={logout} className="rounded-full bg-cocoa px-4 py-2 text-white transition hover:bg-berry">
+              Logout
+            </button>
+          )}
         </div>
       </nav>
     </header>

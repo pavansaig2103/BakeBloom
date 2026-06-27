@@ -9,6 +9,8 @@ import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import CustomOrder from "./pages/CustomOrder.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import Login from "./pages/Login.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 export default function App() {
   return (
@@ -22,7 +24,8 @@ export default function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/custom-order" element={<CustomOrder />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
         </Routes>
       </main>
       <Footer />

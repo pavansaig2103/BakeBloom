@@ -81,9 +81,13 @@ export default function AdminDashboard() {
     .slice(0, 7);
 
   const alerts = [
+    ...requests.filter((item) => (item.status || "New") === "New").slice(0, 4)
+      .map((item) => ({ title: `New enquiry from ${item.customerName}`, body: `${item.selectedDesign || item.theme} for ${dateText(item.requiredDate)}`, badge: "New" })),
     ...analytics.pendingFollowUps.slice(0, 4).map((item) => ({ title: `${item.customerName} needs follow-up`, body: `${item.selectedDesign || item.theme} for ${dateText(item.requiredDate)}`, badge: item.status || "New" })),
     ...orders.filter((item) => daysUntil(item.deliveryDate) <= 3 && daysUntil(item.deliveryDate) >= 0 && (item.status || item.orderStatus) !== "Completed").slice(0, 4)
       .map((item) => ({ title: `Delivery due ${dateText(item.deliveryDate)}`, body: `${item.customerName} - ${item.selectedCake || item.items?.[0]?.name || "Cake order"}`, badge: "High Priority" })),
+    ...orders.filter((item) => (item.paymentStatus || "Pending") !== "Fully Paid").slice(0, 4)
+      .map((item) => ({ title: `Payment ${item.paymentStatus || "Pending"}`, body: `${item.customerName} - Rs. ${item.finalPrice || item.totalAmount || 0}`, badge: item.paymentStatus || "Pending" })),
     ...requests.filter((item) => !item.phone || !item.requiredDate || !item.budget).slice(0, 3)
       .map((item) => ({ title: "Incomplete customer details", body: item.customerName || "Unnamed enquiry", badge: "Pending" }))
   ].slice(0, 8);
@@ -104,25 +108,34 @@ export default function AdminDashboard() {
     }
     setSaving(true);
     const payload = { ...form, weight: form.size, tags: form.tags };
-    const request = editingId ? api.patch(`/products/${editingId}`, payload) : api.post("/products", payload);
-    const { data } = await request;
-    setDesigns((current) => (editingId ? current.map((item) => (item._id === editingId ? data : item)) : [data, ...current]));
-    setForm(blankDesign);
-    setEditingId(null);
-    setSaving(false);
-    setMessage(editingId ? "Cake design updated successfully." : "Cake design added successfully.");
+    try {
+      const request = editingId ? api.patch(`/products/${editingId}`, payload) : api.post("/products", payload);
+      const { data } = await request;
+      setDesigns((current) => (editingId ? current.map((item) => (item._id === editingId ? data : item)) : [data, ...current]));
+      setForm(blankDesign);
+      setEditingId(null);
+      setMessage(editingId ? "Cake design updated successfully." : "Cake design added successfully.");
+    } catch (error) {
+      setMessage(apiError(error, "Could not save cake design."));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const editDesign = (design) => {
-    setActiveTab("Gallery");
+    setActiveTab("Cake Designs");
     setEditingId(design._id);
     setForm({ ...blankDesign, ...design, size: design.size || design.weight || "1kg", tags: (design.tags || []).join(", ") });
   };
 
   const deleteDesign = async (id) => {
-    await api.delete(`/products/${id}`);
-    setDesigns((current) => current.filter((item) => item._id !== id));
-    setMessage("Cake design deleted.");
+    try {
+      await api.delete(`/products/${id}`);
+      setDesigns((current) => current.filter((item) => item._id !== id));
+      setMessage("Cake design deleted.");
+    } catch (error) {
+      setMessage(apiError(error, "Could not delete cake design."));
+    }
   };
 
   const updateEnquiryStatus = async (id, status) => {
@@ -191,7 +204,7 @@ export default function AdminDashboard() {
           <h1 className="mt-2 font-display text-4xl font-bold text-ganache">Bakery Gallery & Order Command Center</h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          {["Dashboard", "Gallery", "Enquiries", "Orders", "Reports"].map((tab) => (
+          {["Dashboard", "Cake Designs", "Enquiries", "Orders", "Reports"].map((tab) => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-4 py-2 text-sm font-bold transition ${activeTab === tab ? "bg-cocoa text-white" : "bg-white text-cocoa shadow-sm hover:text-berry"}`}>
               {tab}
             </button>
@@ -229,7 +242,7 @@ export default function AdminDashboard() {
         </>
       )}
 
-      {activeTab === "Gallery" && (
+      {activeTab === "Cake Designs" && (
         <div className="mt-8 grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <DesignForm form={form} setForm={setForm} saveDesign={saveDesign} saving={saving} editingId={editingId} cancel={() => { setForm(blankDesign); setEditingId(null); }} />
           <section className="rounded-3xl bg-white p-6 shadow-soft">
@@ -314,6 +327,7 @@ export default function AdminDashboard() {
           <ReportPanel title="Confirmed Orders by Month" data={analytics.monthlyOrders} />
           <ReportPanel title="Popular Categories" data={analytics.categoryCounts} />
           <ReportPanel title="Price-range Demand" data={analytics.priceCounts} />
+          <ReportPanel title="Confirmed vs Cancelled Enquiries" data={pickKeys(analytics.statusCounts, ["Confirmed", "Cancelled"])} />
           <div className="rounded-3xl bg-white p-6 shadow-soft lg:col-span-2">
             <h2 className="font-display text-2xl font-bold text-ganache">Management Summary</h2>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -421,6 +435,13 @@ function countBy(items, selector) {
 
 function topEntry(counts) {
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+}
+
+function pickKeys(source, keys) {
+  return keys.reduce((acc, key) => {
+    acc[key] = source[key] || 0;
+    return acc;
+  }, {});
 }
 
 function budgetRange(value) {
